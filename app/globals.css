@@ -1,0 +1,220 @@
+:root {
+  --ink: #1a1a1a;
+  --paper: #fafaf8;
+  --accent: #8b3a2a;
+  --border: #e0ddd6;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+}
+
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.booking-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.booking-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.booking-form input,
+.booking-form select {
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.booking-form button {
+  padding: 0.75rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.cta {
+  display: inline-block;
+  margin-top: 1.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--accent);
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+}
+
+.appointment-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.appointment-table th,
+.appointment-table td {
+  text-align: left;
+  padding: 0.6rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.stats {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.location-switcher {
+  padding: 0.4rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button,
+select,
+input,
+.cta {
+  min-height: 44px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.empty-state {
+  padding: 2rem 0;
+  color: #4a4a4a;
+}
+
+.error,
+.status-error {
+  color: #9b1c1c;
+  font-size: 0.9rem;
+}
+
+.status-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.status-select {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: #fff;
+}
+
+.status-completed { border-color: #1f6b3a; color: #1f6b3a; }
+.status-no_show { border-color: #9b1c1c; color: #9b1c1c; }
+.status-cancelled { color: #4a4a4a; }
+
+@media (max-width: 600px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .stats {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0 0.5rem;
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.slot-picker {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.slot-picker legend {
+  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+}
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 0.5rem;
+}
+
+.booking-form .slot {
+  position: relative;
+  display: block;
+}
+
+.booking-form .slot input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.slot span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.slot input:checked + span {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.slot input:focus-visible + span {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
