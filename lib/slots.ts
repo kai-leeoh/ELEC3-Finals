@@ -1,10 +1,10 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-import { SHOP_OFFSET, SLOT_MINUTES } from './shop';
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { SHOP_OFFSET, SLOT_MINUTES } from "./shop";
 
 const MINUTE = 60 * 1000;
 
 export function isUuid(value: unknown): value is string {
-  return typeof value === 'string' && /^[0-9a-f-]{36}$/i.test(value);
+  return typeof value === "string" && /^[0-9a-f-]{36}$/i.test(value);
 }
 
 interface BusyRange {
@@ -34,11 +34,17 @@ export function computeSlots({
   const close = new Date(`${date}T${closesAt}${SHOP_OFFSET}`).getTime();
   const slots: string[] = [];
 
-  for (let start = open; start + durationMinutes * MINUTE <= close; start += SLOT_MINUTES * MINUTE) {
+  for (
+    let start = open;
+    start + durationMinutes * MINUTE <= close;
+    start += SLOT_MINUTES * MINUTE
+  ) {
     const end = start + durationMinutes * MINUTE;
     const inPast = start <= now.getTime();
     const clashes = busy.some(
-      (b) => start < new Date(b.ends_at).getTime() && end > new Date(b.starts_at).getTime()
+      (b) =>
+        start < new Date(b.ends_at).getTime() &&
+        end > new Date(b.starts_at).getTime(),
     );
     if (!inPast && !clashes) slots.push(new Date(start).toISOString());
   }
@@ -46,7 +52,7 @@ export function computeSlots({
 }
 
 export type SlotsResult =
-  | { error: 'bad_date' | 'not_found' }
+  | { error: "bad_date" | "not_found" }
   | { error?: undefined; slots: string[]; durationMinutes: number };
 
 // Loads the branch hours, barber days off, service length and existing
@@ -63,26 +69,32 @@ export async function getAvailableSlots(args: {
 
   const noon = new Date(`${date}T12:00:00${SHOP_OFFSET}`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(noon.getTime())) {
-    return { error: 'bad_date' };
+    return { error: "bad_date" };
   }
 
-  const [{ data: location }, { data: barber }, { data: service }] = await Promise.all([
-    db.from('locations').select('opens_at, closes_at').eq('id', locationId).single(),
-    db
-      .from('barbers')
-      .select('days_off')
-      .eq('id', barberId)
-      .eq('location_id', locationId)
-      .eq('active', true)
-      .single(),
-    db
-      .from('services')
-      .select('duration_minutes')
-      .eq('id', serviceId)
-      .or(`location_id.eq.${locationId},location_id.is.null`)
-      .single(),
-  ]);
-  if (!location || !barber || !service) return { error: 'not_found' };
+  const [{ data: location }, { data: barber }, { data: service }] =
+    await Promise.all([
+      db
+        .from("locations")
+        .select("opens_at, closes_at")
+        .eq("id", locationId)
+        .single(),
+      db
+        .from("barbers")
+        .select("days_off")
+        .eq("id", barberId)
+        .eq("location_id", locationId)
+        .eq("active", true)
+        .single(),
+      db
+        .from("services")
+        .select("duration_minutes")
+        .eq("id", serviceId)
+        .or(`location_id.eq.${locationId},location_id.is.null`)
+        .single(),
+    ]);
+  console.log("slots debug", { location, barber, service });
+  if (!location || !barber || !service) return { error: "not_found" };
 
   const durationMinutes = service.duration_minutes as number;
 
@@ -95,12 +107,12 @@ export async function getAvailableSlots(args: {
   const dayEnd = new Date(`${date}T23:59:59${SHOP_OFFSET}`).toISOString();
 
   const { data: busy } = await db
-    .from('appointments')
-    .select('starts_at, ends_at')
-    .eq('barber_id', barberId)
-    .neq('status', 'cancelled')
-    .gte('ends_at', dayStart)
-    .lte('starts_at', dayEnd);
+    .from("appointments")
+    .select("starts_at, ends_at")
+    .eq("barber_id", barberId)
+    .neq("status", "cancelled")
+    .gte("ends_at", dayStart)
+    .lte("starts_at", dayEnd);
 
   const slots = computeSlots({
     date,

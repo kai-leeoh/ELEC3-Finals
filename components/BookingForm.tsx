@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { shopDate, formatSlot, SHOP_TIMEZONE } from "../lib/shop";
+import { formatPrice } from "../lib/format";
 import type { Barber, Service } from "../lib/types";
 
 type SlotsStatus = "loading" | "ready" | "error";
@@ -32,7 +33,8 @@ export default function BookingForm({
     name: "",
     phone: "",
     barberId: barbers[0]?.id ?? "",
-    serviceId: services[0]?.id ?? "",
+    serviceId:
+      (services.find((s) => s.category !== "spa") ?? services[0])?.id ?? "",
     date: shopDate(),
     startsAt: "",
     referredBy: "",
@@ -103,13 +105,19 @@ export default function BookingForm({
         setRefreshKey((k) => k + 1);
         return;
       }
-      if (!res.ok) throw new Error("Booking failed");
+      if (!res.ok) {
+        const info = await res.json().catch(() => null);
+        throw new Error(info?.error ?? "Booking failed");
+      }
       setStatus("done");
     } catch (err) {
       console.error(err);
       setStatus("error");
     }
   }
+
+  const barberServices = services.filter((s) => s.category !== "spa");
+  const spaServices = services.filter((s) => s.category === "spa");
 
   if (!barbers.length || !services.length) {
     return (
@@ -126,14 +134,16 @@ export default function BookingForm({
       timeStyle: "short",
     });
     return (
-      <p className="confirmation">You're booked for {when}. See you then.</p>
+      <p className="confirmation" role="status">
+        You're booked for {when}. See you then.
+      </p>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="booking-form">
-      <label>
-        Name
+    <form onSubmit={handleSubmit} className="form">
+      <label className="field">
+        <span>Name</span>
         <input
           required
           value={form.name}
@@ -141,8 +151,8 @@ export default function BookingForm({
         />
       </label>
 
-      <label>
-        Phone
+      <label className="field">
+        <span>Phone</span>
         <input
           required
           type="tel"
@@ -151,8 +161,8 @@ export default function BookingForm({
         />
       </label>
 
-      <label>
-        Barber
+      <label className="field">
+        <span>Barber</span>
         <select
           value={form.barberId}
           onChange={(e) => update("barberId", e.target.value)}
@@ -165,35 +175,41 @@ export default function BookingForm({
         </select>
       </label>
 
-      <label>
-        Service
+      <label className="field">
+        <span>Service</span>
         <select
           value={form.serviceId}
           onChange={(e) => update("serviceId", e.target.value)}
         >
-          <optgroup label="Barber services">
-            {services
-              .filter((s) => !s.name.toLowerCase().includes("hair color"))
-              .map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} (₱{s.price})
-                </option>
-              ))}
-          </optgroup>
-          <optgroup label="Offers and Spa">
-            {services
-              .filter((s) => s.name.toLowerCase().includes("hair color"))
-              .map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} (₱{s.price})
-                </option>
-              ))}
-          </optgroup>
+          {spaServices.length === 0 ? (
+            barberServices.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}: {formatPrice(s.price)}
+              </option>
+            ))
+          ) : (
+            <>
+              <optgroup label="Barber services">
+                {barberServices.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}: {formatPrice(s.price)}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Offers and spa">
+                {spaServices.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}: {formatPrice(s.price)}
+                  </option>
+                ))}
+              </optgroup>
+            </>
+          )}
         </select>
       </label>
 
-      <label>
-        Date
+      <label className="field">
+        <span>Date</span>
         <input
           required
           type="date"
@@ -207,7 +223,7 @@ export default function BookingForm({
         <legend>Time</legend>
         {slotsStatus === "loading" && <p role="status">Loading times…</p>}
         {slotsStatus === "error" && (
-          <p className="error" role="alert">
+          <p className="alert" role="alert">
             Couldn't load times. Refresh the page or try another date.
           </p>
         )}
@@ -234,31 +250,33 @@ export default function BookingForm({
         )}
       </fieldset>
 
-      <label>
-        How did you hear about us? (optional)
+      <label className="field">
+        <span>Referred by (optional)</span>
         <input
+          placeholder="Name or code"
           value={form.referredBy}
           onChange={(e) => update("referredBy", e.target.value)}
         />
       </label>
 
-      <button
-        type="submit"
-        disabled={status === "submitting" || !form.startsAt}
-      >
-        {status === "submitting" ? "Booking…" : "Confirm booking"}
-      </button>
-
       {status === "taken" && (
-        <p className="error" role="alert">
-          Someone just booked that time. Pick another one.
+        <p className="alert" role="alert">
+          That time was just taken. Pick another time or barber.
         </p>
       )}
       {status === "error" && (
-        <p className="error" role="alert">
+        <p className="alert" role="alert">
           Something went wrong. Try again.
         </p>
       )}
+
+      <button
+        type="submit"
+        className="btn"
+        disabled={status === "submitting" || !form.startsAt}
+      >
+        {status === "submitting" ? "Booking…" : "Book appointment"}
+      </button>
     </form>
   );
 }

@@ -1,10 +1,10 @@
-import LocationSwitcher from '../../components/LocationSwitcher';
-import SignOutButton from '../../components/SignOutButton';
-import StatusButtons from '../../components/StatusButtons';
-import { supabaseAdmin } from '../../lib/supabase';
-import { getAdminAccess } from '../../lib/supabase-server';
-import { SHOP_TIMEZONE, shopDate, SHOP_OFFSET } from '../../lib/shop';
-import type { AppointmentRow } from '../../lib/types';
+import LocationSwitcher from "../../components/LocationSwitcher";
+import SignOutButton from "../../components/SignOutButton";
+import StatusButtons from "../../components/StatusButtons";
+import { supabaseAdmin } from "../../lib/supabase";
+import { getAdminAccess } from "../../lib/supabase-server";
+import { SHOP_TIMEZONE, shopDate, SHOP_OFFSET } from "../../lib/shop";
+import type { AppointmentRow } from "../../lib/types";
 
 // Admin dashboard: /admin?location=main
 // Only shows branches listed for this user in admin_users.
@@ -17,8 +17,9 @@ export default async function AdminDashboard({
   if (!access) {
     return (
       <main className="page">
-        <p className="error" role="alert">
-          This account isn't set up as staff for any branch. Ask the owner to add you.
+        <p className="alert" role="alert">
+          This account isn't set up as staff for any branch. Ask the owner to
+          add you.
         </p>
         <SignOutButton />
       </main>
@@ -29,12 +30,17 @@ export default async function AdminDashboard({
   const activeSlug = (await searchParams)?.location;
 
   const { data: locations } = await db
-    .from('locations')
-    .select('id, name, slug')
-    .in('id', access.locationIds);
-  const current = locations?.find((l) => l.slug === activeSlug) ?? locations?.[0];
+    .from("locations")
+    .select("id, name, slug")
+    .in("id", access.locationIds);
+  const current =
+    locations?.find((l) => l.slug === activeSlug) ?? locations?.[0];
   if (!current) {
-    return <main className="page"><p>No locations set up yet.</p></main>;
+    return (
+      <main className="page">
+        <p className="empty-state">No locations set up yet.</p>
+      </main>
+    );
   }
 
   // "Today" means today in the Philippines, whatever timezone the server runs in.
@@ -43,42 +49,63 @@ export default async function AdminDashboard({
   const endOfDay = new Date(`${today}T23:59:59.999${SHOP_OFFSET}`);
 
   const { data, error } = await db
-    .from('appointments')
-    .select('*, customers(name, phone), barbers(name), services(name, price)')
-    .eq('location_id', current.id)
-    .gte('starts_at', startOfDay.toISOString())
-    .lte('starts_at', endOfDay.toISOString())
-    .order('starts_at', { ascending: true });
+    .from("appointments")
+    .select("*, customers(name, phone), barbers(name), services(name, price)")
+    .eq("location_id", current.id)
+    .gte("starts_at", startOfDay.toISOString())
+    .lte("starts_at", endOfDay.toISOString())
+    .order("starts_at", { ascending: true });
 
   if (error) {
     return (
       <main className="page">
-        <p className="error" role="alert">Couldn't load today's bookings. Refresh the page to try again.</p>
+        <p className="alert" role="alert">
+          Couldn't load today's bookings. Refresh the page to try again.
+        </p>
       </main>
     );
   }
 
   const appointments = (data ?? []) as unknown as AppointmentRow[];
-  const noShowCount = appointments.filter((a) => a.status === 'no_show').length;
+  const noShowCount = appointments.filter((a) => a.status === "no_show").length;
   const total = appointments.length;
 
   return (
     <main className="page admin-dashboard">
       <header className="page-header">
-        <h1>{current.name}: today's schedule</h1>
-        <SignOutButton />
-        <LocationSwitcher locations={locations ?? []} currentSlug={current.slug} basePath="/admin" queryParam="location" />
+        <div>
+          <h1>Today's schedule</h1>
+          <p className="sub">{current.name}</p>
+        </div>
+        <div className="header-row">
+          <LocationSwitcher
+            locations={locations ?? []}
+            currentSlug={current.slug}
+            basePath="/admin"
+            queryParam="location"
+          />
+          <SignOutButton />
+        </div>
       </header>
 
       <section className="stats">
-        <div><strong>{total}</strong> booked today</div>
-        <div><strong>{noShowCount}</strong> no-shows</div>
+        <div className="stat">
+          <strong>{total}</strong>
+          <span>booked today</span>
+        </div>
+        <div className="stat no-shows">
+          <strong>{noShowCount}</strong>
+          <span>no-shows</span>
+        </div>
       </section>
 
       {total === 0 ? (
-        <p className="empty-state">No bookings yet today at {current.name}.</p>
+        <div className="card empty-state">
+          <b>No bookings yet today</b>
+          New appointments at {current.name} will show up here.
+        </div>
       ) : (
-        <div className="table-wrap">
+        <div className="card table-wrap">
           <table className="appointment-table">
             <thead>
               <tr>
@@ -93,17 +120,25 @@ export default async function AdminDashboard({
               {appointments.map((a) => (
                 <tr key={a.id}>
                   <td>
-                    {new Date(a.starts_at).toLocaleTimeString('en-PH', {
-                      timeZone: SHOP_TIMEZONE,
-                      hour: 'numeric',
-                      minute: '2-digit',
-                    })}
+                    <b>
+                      {new Date(a.starts_at).toLocaleTimeString("en-PH", {
+                        timeZone: SHOP_TIMEZONE,
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </b>
                   </td>
-                  <td>{a.customers?.name} ({a.customers?.phone})</td>
+                  <td>
+                    {a.customers?.name}
+                    <small>{a.customers?.phone}</small>
+                  </td>
                   <td>{a.barbers?.name}</td>
                   <td>{a.services?.name}</td>
                   <td>
-                    <StatusButtons appointmentId={a.id} initialStatus={a.status} />
+                    <StatusButtons
+                      appointmentId={a.id}
+                      initialStatus={a.status}
+                    />
                   </td>
                 </tr>
               ))}
