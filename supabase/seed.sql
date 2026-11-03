@@ -27,4 +27,5 @@ select id, n from second_branch,
 insert into services (location_id, name, price, duration_minutes) values
   (null, 'Haircut', 150, 30),
   (null, 'Haircut and beard trim', 250, 60),
-  (null, 'Shave', 100, 30);
+  (null, 'Shave', 100, 30),
+  (null, 'Hair color', 800, 90);
