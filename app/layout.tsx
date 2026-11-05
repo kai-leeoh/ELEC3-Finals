@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import SiteNav from "../components/SiteNav";
-import { supabase } from "../lib/supabase";
+import SplashScreen from "../components/SplashScreen";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,18 +15,7 @@ export const viewport: Viewport = {
   themeColor: "#1f1d1b",
 };
 
-export const dynamic = "force-dynamic";
-
-export default async function RootLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  const { data } = await supabase
-    .from("locations")
-    .select("name, slug")
-    .order("created_at");
-
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -42,8 +31,9 @@ export default async function RootLayout({
         />
       </head>
       <body>
+        <SplashScreen />
         <div className="shell">
-          <SiteNav locations={data ?? []} />
+          <SiteNav />
           {children}
         </div>
       </body>

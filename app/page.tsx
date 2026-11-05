@@ -1,70 +1,80 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { supabase } from "../lib/supabase";
+import { formatPrice } from "../lib/format";
+import type { Service } from "../lib/types";
 
 export const dynamic = "force-dynamic";
 
-// With one branch, skip the picker so a single-shop site feels like a normal site.
-export default async function Home() {
-  const { data: locations, error } = await supabase
-    .from("locations")
-    .select("id, name, slug, address")
-    .order("created_at");
+function ServiceCard({ services }: { services: Service[] }) {
+  return (
+    <div className="card service-card">
+      <ul className="service-list">
+        {services.map((s) => (
+          <li key={s.id} className="service">
+            <div className="service-title">
+              <span>{s.name}</span>
+              <span className="service-leader" aria-hidden="true" />
+              <span className="service-price">{formatPrice(s.price)}</span>
+            </div>
+            {s.description && <p>{s.description}</p>}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// Dashboard tab: the offers (services list) and the spa offers.
+export default async function Dashboard() {
+  const { data, error } = await supabase
+    .from("services")
+    .select("*")
+    .returns<Service[]>();
 
   if (error) {
-    console.error("Could not load locations:", error);
+    console.error("Could not load offers:", error);
     return (
       <main className="page">
-        <p className="error" role="alert">
-          Couldn't load branches. Check the Supabase keys in .env.local and the
+        <p className="alert" role="alert">
+          Couldn't load offers. Check the Supabase keys in .env.local and the
           terminal for details.
         </p>
       </main>
     );
   }
 
-  if (!locations?.length) {
-    return (
-      <main className="page">
-        <p className="empty-state">
-          No branches yet. Run supabase/seed.sql in the Supabase SQL Editor.
-        </p>
-      </main>
-    );
-  }
-
-  if (locations.length === 1) {
-    redirect(`/${locations[0].slug}`);
-  }
-
-  const { data: barbers } = await supabase
-    .from("barbers")
-    .select("location_id")
-    .eq("active", true);
-  const countFor = (id: string) =>
-    barbers?.filter((b) => b.location_id === id).length ?? 0;
+  // The same service name is listed once, even if it is saved for more than one branch.
+  const all = (data ?? []).filter(
+    (s, i, list) => list.findIndex((o) => o.name === s.name) === i,
+  );
+  const services = all.filter((s) => s.category !== "spa");
+  const spaOffers = all.filter((s) => s.category === "spa");
 
   return (
     <main className="page">
-      <h1>Choose a branch</h1>
-      <p className="sub">
-        Pick the shop closest to you to see barbers and open times.
-      </p>
-      <ul className="location-list">
-        {locations.map((loc) => (
-          <li key={loc.slug}>
-            <Link href={`/${loc.slug}`}>
-              <div>
-                {loc.name}
-                <small>
-                  {loc.address || "Address to be added"} · {countFor(loc.id)}{" "}
-                  barbers
-                </small>
-              </div>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <h1>Offers</h1>
+      <p className="sub">Our services and offers, available at every branch.</p>
+
+      <h2 className="section-title">Services</h2>
+      {services.length === 0 ? (
+        <div className="card empty-state">
+          <b>No offers right now</b>
+          Check back soon.
+        </div>
+      ) : (
+        <ServiceCard services={services} />
+      )}
+
+      {spaOffers.length > 0 && (
+        <>
+          <h2 className="section-title">Offers and spa</h2>
+          <ServiceCard services={spaOffers} />
+        </>
+      )}
+
+      <Link href="/book" className="btn cta">
+        Book an appointment
+      </Link>
     </main>
   );
 }

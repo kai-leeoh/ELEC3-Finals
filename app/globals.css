@@ -48,6 +48,7 @@ p {
   background: var(--bg);
   --gutter: 20px;
   --page-width: 1080px;
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
 }
 
 /* ---------- Navbar ---------- */
@@ -101,25 +102,44 @@ p {
   );
 }
 
-/* Phone: the three links sit in a row under the logo */
-.nav-links {
+/* Bottom navigation bar: stays at the bottom of the screen */
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
-  width: 100%;
+  padding: 8px var(--gutter) calc(8px + env(safe-area-inset-bottom));
+  background: #1f1d1b;
+  border-top: 1px solid var(--border);
 }
-.nav-links a {
+.bottom-nav a {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  gap: 3px;
+  min-height: 58px;
+  border: 1px solid transparent;
+  border-radius: 10px;
   color: var(--muted);
   font-weight: 600;
-  font-size: 15px;
+  font-size: 12px;
+  letter-spacing: 0.02em;
 }
-.nav-links a.on {
+.bottom-nav svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.bottom-nav a.on {
   background: var(--cream);
   border-color: var(--cream);
   color: var(--on-cream);
@@ -628,13 +648,8 @@ h1 {
   .page {
     padding-top: 40px;
   }
-  .nav-links {
-    display: flex;
-    width: auto;
-  }
-  .nav-links a {
-    padding: 0 20px;
-    border-color: transparent;
+  .bottom-nav {
+    padding-inline: max(var(--gutter), calc((100% - 480px) / 2));
   }
   .page-header {
     flex-direction: row;
@@ -678,7 +693,7 @@ h1 {
 
 /* Hover styles only where there is a real pointer */
 @media (hover: hover) {
-  .nav-links a:not(.on):hover,
+  .bottom-nav a:not(.on):hover,
   .link-button:hover {
     color: #fff;
     border-color: var(--border);
@@ -780,4 +795,13 @@ h1 {
   40% {
     opacity: 1;
   }
+}
+
+/* Opening splash fades out when it is done */
+.splash {
+  transition: opacity 0.4s ease;
+}
+.splash.hide {
+  opacity: 0;
+  pointer-events: none;
 }

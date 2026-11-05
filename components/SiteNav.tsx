@@ -2,56 +2,76 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
 
-// Top bar: logo plus three links (Dashboard, Booking, Staff).
-// Booking opens the booking form for the branch you are viewing,
-// or the first branch if you are somewhere else.
-export default function SiteNav({
-  locations,
-}: {
-  locations: { name: string; slug: string }[];
-}) {
+// Simple line icons, drawn inline so no extra package is needed.
+const icons: Record<string, ReactNode> = {
+  Dashboard: (
+    <>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+    </>
+  ),
+  Booking: (
+    <>
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M16 2v4M8 2v4M3 10h18" />
+    </>
+  ),
+  Staff: (
+    <>
+      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </>
+  ),
+};
+
+// Logo at the top, and the three tabs in a bar fixed to the bottom of the screen:
+// Dashboard (offers), Booking (the branches), Staff (sign in and schedule).
+export default function SiteNav() {
   const pathname = usePathname();
 
-  const firstSegment = pathname.split("/")[1] ?? "";
-  const branchSlug =
-    locations.find((l) => l.slug === firstSegment)?.slug ?? locations[0]?.slug;
-  const bookingHref = branchSlug ? `/${branchSlug}/book` : "/";
-
   const onStaff = pathname === "/admin" || pathname.startsWith("/admin/");
-  const onBooking = !onStaff && pathname.endsWith("/book");
-  const onDashboard = !onStaff && !onBooking;
+  const onDashboard = pathname === "/";
+  const onBooking = !onStaff && !onDashboard; // /book, branch pages and the booking form
 
   const links = [
     { label: "Dashboard", href: "/", on: onDashboard },
-    { label: "Booking", href: bookingHref, on: onBooking },
+    { label: "Booking", href: "/book", on: onBooking },
     { label: "Staff", href: "/admin", on: onStaff },
   ];
 
   return (
-    <header className="site-header">
-      <div className="site-nav">
-        <Link href="/" className="logo">
-          <i className="pole" aria-hidden="true" />
-          <span>
-            Pau Cutz
-            <small>Barber shop</small>
-          </span>
-        </Link>
+    <>
+      <header className="site-header">
+        <div className="site-nav">
+          <Link href="/" className="logo">
+            <i className="pole" aria-hidden="true" />
+            <span>
+              Pau Cutz
+              <small>Barber shop</small>
+            </span>
+          </Link>
+        </div>
+      </header>
 
-        <nav className="nav-links" aria-label="Main">
-          {links.map((l) => (
-            <Link
-              key={l.label}
-              href={l.href}
-              className={l.on ? "on" : ""}
-              aria-current={l.on ? "page" : undefined}
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-    </header>
+      <nav className="bottom-nav" aria-label="Main">
+        {links.map((l) => (
+          <Link
+            key={l.label}
+            href={l.href}
+            className={l.on ? "on" : ""}
+            aria-current={l.on ? "page" : undefined}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              {icons[l.label]}
+            </svg>
+            <span>{l.label}</span>
+          </Link>
+        ))}
+      </nav>
+    </>
   );
 }
