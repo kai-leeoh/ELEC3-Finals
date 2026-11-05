@@ -59,9 +59,11 @@ p {
 
 .site-nav {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  padding: 14px max(var(--gutter), calc((100% - var(--page-width)) / 2));
+  gap: 12px 16px;
+  padding: 12px max(var(--gutter), calc((100% - var(--page-width)) / 2));
   background: #1f1d1b;
   border-bottom: 1px solid var(--border);
 }
@@ -99,46 +101,28 @@ p {
   );
 }
 
-.navbtn {
+/* Phone: the three links sit in a row under the logo */
+.nav-links {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  width: 100%;
+}
+.nav-links a {
   display: flex;
   align-items: center;
+  justify-content: center;
   min-height: 44px;
-  padding: 0 14px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: none;
-  color: var(--cream);
-  font: inherit;
-  font-weight: 600;
-  font-size: 15px;
-  cursor: pointer;
-}
-
-.menu {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 100%;
-  background: #1f1d1b;
-  border-bottom: 1px solid var(--border);
-  padding: 8px var(--gutter) 16px;
-}
-.menu a {
-  display: flex;
-  align-items: center;
-  min-height: 48px;
   color: var(--muted);
   font-weight: 600;
-  font-size: 16px;
-  border-bottom: 1px solid var(--border);
+  font-size: 15px;
 }
-.menu a:last-child {
-  border-bottom: 0;
-}
-.menu a.on {
-  color: var(--cream);
-  border-left: 4px solid var(--red);
-  padding-left: 12px;
+.nav-links a.on {
+  background: var(--cream);
+  border-color: var(--cream);
+  color: var(--on-cream);
 }
 
 /* ---------- Page ---------- */
@@ -644,6 +628,14 @@ h1 {
   .page {
     padding-top: 40px;
   }
+  .nav-links {
+    display: flex;
+    width: auto;
+  }
+  .nav-links a {
+    padding: 0 20px;
+    border-color: transparent;
+  }
   .page-header {
     flex-direction: row;
     justify-content: space-between;
@@ -682,24 +674,14 @@ h1 {
   .service-card {
     padding: 8px 28px;
   }
-
-  /* The menu becomes a dropdown panel under the Menu button */
-  .menu {
-    left: auto;
-    right: max(var(--gutter), calc((100% - var(--page-width)) / 2));
-    width: 300px;
-    border: 1px solid var(--border);
-    border-top: 0;
-    border-radius: 0 0 12px 12px;
-  }
 }
 
 /* Hover styles only where there is a real pointer */
 @media (hover: hover) {
-  .navbtn:hover,
-  .menu a:hover,
+  .nav-links a:not(.on):hover,
   .link-button:hover {
     color: #fff;
+    border-color: var(--border);
   }
   .location-list a:hover {
     background: var(--surface2);
@@ -709,5 +691,93 @@ h1 {
   }
   .slot:hover span {
     border-color: var(--cream);
+  }
+}
+
+/* ---------- Loading screen ---------- */
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: var(--bg);
+  text-align: center;
+}
+
+/* Barber pole: diagonal stripes that slide so the pole looks like it is turning.
+   The tile size is 40px x sqrt(2), so the stripes loop with no jump. */
+.loading-pole {
+  width: 36px;
+  height: 120px;
+  margin-bottom: 20px;
+  border: 3px solid var(--cream);
+  border-radius: 10px;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--red) 0 10px,
+    #f4efe6 10px 20px,
+    var(--blue) 20px 30px,
+    #f4efe6 30px 40px
+  );
+  background-size: 56.5685px 56.5685px;
+  animation: pole 1s linear infinite;
+}
+@keyframes pole {
+  to {
+    background-position: 0 56.5685px;
+  }
+}
+
+.loading-title {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 56px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--cream);
+}
+.loading-sub {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.loading-text {
+  margin: 22px 0 0;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.dots i {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: var(--cream);
+  animation: dot 1.2s infinite ease-in-out;
+}
+.dots i:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.dots i:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.2;
+  }
+  40% {
+    opacity: 1;
   }
 }
