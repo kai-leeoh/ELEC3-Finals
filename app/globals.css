@@ -19,7 +19,7 @@
 }
 
 html {
-  background: #1c1b1a;
+  background: var(--bg);
 }
 
 body {
@@ -41,15 +41,13 @@ p {
   margin: 0 0 8px;
 }
 
-/* One phone-sized column. Staff pages open up on wide screens. */
+/* Mobile first: one column that fills the screen.
+   On wider screens the navbar spans the screen and the content is centered. */
 .shell {
-  max-width: 480px;
   min-height: 100dvh;
-  margin: 0 auto;
   background: var(--bg);
-}
-body:has(.admin-dashboard) .shell {
-  max-width: 960px;
+  --gutter: 20px;
+  --page-width: 1080px;
 }
 
 /* ---------- Navbar ---------- */
@@ -63,7 +61,7 @@ body:has(.admin-dashboard) .shell {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 20px;
+  padding: 14px max(var(--gutter), calc((100% - var(--page-width)) / 2));
   background: #1f1d1b;
   border-bottom: 1px solid var(--border);
 }
@@ -123,7 +121,7 @@ body:has(.admin-dashboard) .shell {
   top: 100%;
   background: #1f1d1b;
   border-bottom: 1px solid var(--border);
-  padding: 8px 20px 16px;
+  padding: 8px var(--gutter) 16px;
 }
 .menu a {
   display: flex;
@@ -145,7 +143,21 @@ body:has(.admin-dashboard) .shell {
 
 /* ---------- Page ---------- */
 .page {
-  padding: 28px 20px 40px;
+  --content: var(--page-width);
+  width: 100%;
+  max-width: var(--content);
+  margin: 0 auto;
+  padding: 28px var(--gutter) 48px;
+}
+/* Forms and the branch picker read better in a narrower column */
+.page:has(> .card > .form) {
+  --content: 600px;
+}
+.page:has(.location-list) {
+  --content: 760px;
+}
+.admin-dashboard {
+  --content: 1100px;
 }
 
 h1 {
@@ -228,7 +240,7 @@ h1 {
 
 .barbers {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 10px;
   list-style: none;
   margin: 0;
@@ -298,8 +310,8 @@ h1 {
 
 /* ---------- Branch picker ---------- */
 .location-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 12px;
   list-style: none;
   margin: 0;
@@ -617,5 +629,85 @@ h1 {
     scroll-behavior: auto !important;
     transition: none !important;
     animation: none !important;
+  }
+}
+
+/* ---------- Tablet and up ---------- */
+@media (min-width: 640px) {
+  :root {
+    font-size: 17px;
+  }
+  h1 {
+    font-size: 48px;
+  }
+
+  .page {
+    padding-top: 40px;
+  }
+  .page-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .chips {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .chip {
+    flex: 0 1 auto;
+  }
+  .service-list {
+    columns: 2;
+    column-gap: 40px;
+  }
+  .service {
+    break-inside: avoid;
+  }
+  .cta {
+    max-width: 360px;
+  }
+  .stats {
+    max-width: 480px;
+  }
+}
+
+/* ---------- Desktop ---------- */
+@media (min-width: 960px) {
+  .page {
+    padding-top: 48px;
+  }
+  .card {
+    padding: 24px;
+  }
+  .service-card {
+    padding: 8px 28px;
+  }
+
+  /* The menu becomes a dropdown panel under the Menu button */
+  .menu {
+    left: auto;
+    right: max(var(--gutter), calc((100% - var(--page-width)) / 2));
+    width: 300px;
+    border: 1px solid var(--border);
+    border-top: 0;
+    border-radius: 0 0 12px 12px;
+  }
+}
+
+/* Hover styles only where there is a real pointer */
+@media (hover: hover) {
+  .navbtn:hover,
+  .menu a:hover,
+  .link-button:hover {
+    color: #fff;
+  }
+  .location-list a:hover {
+    background: var(--surface2);
+  }
+  .btn:hover:not(:disabled) {
+    background: #f0e6d6;
+  }
+  .slot:hover span {
+    border-color: var(--cream);
   }
 }
