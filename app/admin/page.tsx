@@ -1,9 +1,9 @@
 import LocationSwitcher from "../../components/LocationSwitcher";
 import SignOutButton from "../../components/SignOutButton";
 import StatusButtons from "../../components/StatusButtons";
+import { SHOP_OFFSET, SHOP_TIMEZONE, shopDate } from "../../lib/shop";
 import { supabaseAdmin } from "../../lib/supabase";
 import { getAdminAccess } from "../../lib/supabase-server";
-import { SHOP_TIMEZONE, shopDate, SHOP_OFFSET } from "../../lib/shop";
 import type { AppointmentRow } from "../../lib/types";
 
 // Admin dashboard: /admin?location=main
@@ -119,7 +119,7 @@ export default async function AdminDashboard({
             <tbody>
               {appointments.map((a) => (
                 <tr key={a.id}>
-                  <td>
+                  <td data-label="Time">
                     <b>
                       {new Date(a.starts_at).toLocaleTimeString("en-PH", {
                         timeZone: SHOP_TIMEZONE,
@@ -128,13 +128,15 @@ export default async function AdminDashboard({
                       })}
                     </b>
                   </td>
-                  <td>
-                    {a.customers?.name}
-                    <small>{a.customers?.phone}</small>
+                  <td data-label="Customer">
+                    <span>
+                      {a.customers?.name}
+                      <small>{a.customers?.phone}</small>
+                    </span>
                   </td>
-                  <td>{a.barbers?.name}</td>
-                  <td>{a.services?.name}</td>
-                  <td>
+                  <td data-label="Barber">{a.barbers?.name}</td>
+                  <td data-label="Service">{a.services?.name}</td>
+                  <td data-label="Status">
                     <StatusButtons
                       appointmentId={a.id}
                       initialStatus={a.status}
