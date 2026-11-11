@@ -2,8 +2,9 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import LocationSwitcher from "../../components/LocationSwitcher";
 import BranchNotFound from "../../components/BranchNotFound";
+import ProductCard from "../../components/ProductCard";
 import { formatHours, formatPrice } from "../../lib/format";
-import type { Barber, Location, Service } from "../../lib/types";
+import type { Barber, Location, Product, Service } from "../../lib/types";
 
 function ServiceCard({ services }: { services: Service[] }) {
   return (
@@ -59,7 +60,14 @@ export default async function LocationPage({
     .from("services")
     .select("*")
     .or(`location_id.eq.${location.id},location_id.is.null`)
+    .order("sort_order")
     .returns<Service[]>();
+
+  const { data: products } = await supabase
+    .from("products")
+    .select("*")
+    .order("sort_order")
+    .returns<Product[]>();
 
   const barberServices = (services ?? []).filter((s) => s.category !== "spa");
   const spaServices = (services ?? []).filter((s) => s.category === "spa");
@@ -111,6 +119,13 @@ export default async function LocationPage({
         <>
           <h2 className="section-title">Offers and spa</h2>
           <ServiceCard services={spaServices} />
+        </>
+      )}
+
+      {products && products.length > 0 && (
+        <>
+          <h2 className="section-title">Products</h2>
+          <ProductCard products={products} />
         </>
       )}
 

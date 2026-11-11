@@ -29,6 +29,7 @@ export default async function BookPage({
     .from("services")
     .select("*")
     .or(`location_id.eq.${location.id},location_id.is.null`)
+    .order("sort_order")
     .returns<Service[]>();
 
   return (
