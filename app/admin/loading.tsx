@@ -1,7 +1,5 @@
+import LoadingScreen from "../../components/LoadingScreen";
+
 export default function Loading() {
-  return (
-    <main className="page" aria-busy="true">
-      <p role="status">Loading today's schedule…</p>
-    </main>
-  );
+  return <LoadingScreen />;
 }

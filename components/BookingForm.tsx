@@ -1,11 +1,12 @@
-'use client';
+"use client";
 
-import { useEffect, useState, type FormEvent } from 'react';
-import { shopDate, formatSlot, SHOP_TIMEZONE } from '../lib/shop';
-import type { Barber, Service } from '../lib/types';
+import { useEffect, useState, type FormEvent } from "react";
+import { shopDate, formatSlot, SHOP_TIMEZONE } from "../lib/shop";
+import { formatPrice } from "../lib/format";
+import type { Barber, Service } from "../lib/types";
 
-type SlotsStatus = 'loading' | 'ready' | 'error';
-type SubmitStatus = 'idle' | 'submitting' | 'done' | 'taken' | 'error';
+type SlotsStatus = "loading" | "ready" | "error";
+type SubmitStatus = "idle" | "submitting" | "done" | "taken" | "error";
 
 interface FormState {
   name: string;
@@ -29,18 +30,19 @@ export default function BookingForm({
   services: Service[];
 }) {
   const [form, setForm] = useState<FormState>({
-    name: '',
-    phone: '',
-    barberId: barbers[0]?.id ?? '',
-    serviceId: services[0]?.id ?? '',
+    name: "",
+    phone: "",
+    barberId: barbers[0]?.id ?? "",
+    serviceId:
+      (services.find((s) => s.category !== "spa") ?? services[0])?.id ?? "",
     date: shopDate(),
-    startsAt: '',
-    referredBy: '',
+    startsAt: "",
+    referredBy: "",
   });
   const [slots, setSlots] = useState<string[]>([]);
-  const [slotsStatus, setSlotsStatus] = useState<SlotsStatus>('loading');
+  const [slotsStatus, setSlotsStatus] = useState<SlotsStatus>("loading");
   const [refreshKey, setRefreshKey] = useState(0);
-  const [status, setStatus] = useState<SubmitStatus>('idle');
+  const [status, setStatus] = useState<SubmitStatus>("idle");
 
   function update<K extends keyof FormState>(field: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -50,9 +52,9 @@ export default function BookingForm({
     if (!form.barberId || !form.serviceId || !form.date) return;
 
     const controller = new AbortController();
-    setSlotsStatus('loading');
+    setSlotsStatus("loading");
     setSlots([]);
-    setForm((f) => ({ ...f, startsAt: '' }));
+    setForm((f) => ({ ...f, startsAt: "" }));
 
     const params = new URLSearchParams({
       locationId,
@@ -63,16 +65,16 @@ export default function BookingForm({
 
     fetch(`/api/slots?${params}`, { signal: controller.signal })
       .then((res) => {
-        if (!res.ok) throw new Error('Could not load times');
+        if (!res.ok) throw new Error("Could not load times");
         return res.json() as Promise<{ slots: string[] }>;
       })
       .then((data) => {
         setSlots(data.slots);
-        setSlotsStatus('ready');
+        setSlotsStatus("ready");
       })
       .catch((err: unknown) => {
-        if (err instanceof Error && err.name === 'AbortError') return;
-        setSlotsStatus('error');
+        if (err instanceof Error && err.name === "AbortError") return;
+        setSlotsStatus("error");
       });
 
     return () => controller.abort();
@@ -81,12 +83,12 @@ export default function BookingForm({
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!form.startsAt) return;
-    setStatus('submitting');
+    setStatus("submitting");
 
     try {
-      const res = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           locationId,
           name: form.name,
@@ -99,82 +101,138 @@ export default function BookingForm({
       });
 
       if (res.status === 409) {
-        setStatus('taken');
+        setStatus("taken");
         setRefreshKey((k) => k + 1);
         return;
       }
-      if (!res.ok) throw new Error('Booking failed');
-      setStatus('done');
+      if (!res.ok) {
+        const info = await res.json().catch(() => null);
+        throw new Error(info?.error ?? "Booking failed");
+      }
+      setStatus("done");
     } catch (err) {
       console.error(err);
-      setStatus('error');
+      setStatus("error");
     }
   }
 
+  const barberServices = services.filter((s) => s.category !== "spa");
+  const spaServices = services.filter((s) => s.category === "spa");
+
   if (!barbers.length || !services.length) {
-    return <p className="empty-state">Online booking isn't set up for this branch yet. Call the shop to book.</p>;
+    return (
+      <p className="empty-state">
+        Online booking isn't set up for this branch yet. Call the shop to book.
+      </p>
+    );
   }
 
-  if (status === 'done') {
-    const when = new Date(form.startsAt).toLocaleString('en-PH', {
+  if (status === "done") {
+    const when = new Date(form.startsAt).toLocaleString("en-PH", {
       timeZone: SHOP_TIMEZONE,
-      dateStyle: 'medium',
-      timeStyle: 'short',
+      dateStyle: "medium",
+      timeStyle: "short",
     });
-    return <p className="confirmation">You're booked for {when}. See you then.</p>;
+    return (
+      <p className="confirmation" role="status">
+        You're booked for {when}. See you then.
+      </p>
+    );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="booking-form">
-      <label>
-        Name
-        <input required value={form.name} onChange={(e) => update('name', e.target.value)} />
+    <form onSubmit={handleSubmit} className="form">
+      <label className="field">
+        <span>Name</span>
+        <input
+          required
+          value={form.name}
+          onChange={(e) => update("name", e.target.value)}
+        />
       </label>
 
-      <label>
-        Phone
-        <input required type="tel" value={form.phone} onChange={(e) => update('phone', e.target.value)} />
+      <label className="field">
+        <span>Phone</span>
+        <input
+          required
+          type="tel"
+          value={form.phone}
+          onChange={(e) => update("phone", e.target.value)}
+        />
       </label>
 
-      <label>
-        Barber
-        <select value={form.barberId} onChange={(e) => update('barberId', e.target.value)}>
+      <label className="field">
+        <span>Barber</span>
+        <select
+          value={form.barberId}
+          onChange={(e) => update("barberId", e.target.value)}
+        >
           {barbers.map((b) => (
-            <option key={b.id} value={b.id}>{b.name}</option>
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
           ))}
         </select>
       </label>
 
-      <label>
-        Service
-        <select value={form.serviceId} onChange={(e) => update('serviceId', e.target.value)}>
-          {services.map((s) => (
-            <option key={s.id} value={s.id}>{s.name} (₱{s.price})</option>
-          ))}
+      <label className="field">
+        <span>Service</span>
+        <select
+          value={form.serviceId}
+          onChange={(e) => update("serviceId", e.target.value)}
+        >
+          {spaServices.length === 0 ? (
+            barberServices.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}: {formatPrice(s.price)}
+              </option>
+            ))
+          ) : (
+            <>
+              <optgroup label="Barber services">
+                {barberServices.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}: {formatPrice(s.price)}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Offers and spa">
+                {spaServices.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}: {formatPrice(s.price)}
+                  </option>
+                ))}
+              </optgroup>
+            </>
+          )}
         </select>
       </label>
 
-      <label>
-        Date
+      <label className="field">
+        <span>Date</span>
         <input
           required
           type="date"
           min={shopDate()}
           value={form.date}
-          onChange={(e) => update('date', e.target.value)}
+          onChange={(e) => update("date", e.target.value)}
         />
       </label>
 
       <fieldset className="slot-picker">
         <legend>Time</legend>
-        {slotsStatus === 'loading' && <p role="status">Loading times…</p>}
-        {slotsStatus === 'error' && (
-          <p className="error" role="alert">Couldn't load times. Refresh the page or try another date.</p>
+        {slotsStatus === "loading" && <p role="status">Loading times…</p>}
+        {slotsStatus === "error" && (
+          <p className="alert" role="alert">
+            Couldn't load times. Refresh the page or try another date.
+          </p>
         )}
-        {slotsStatus === 'ready' && slots.length === 0 && (
-          <p className="empty-state">No times left on this day. Try another date or barber.</p>
+        {slotsStatus === "ready" && slots.length === 0 && (
+          <p className="empty-state">
+            No times left on this day. Try another date or barber.
+          </p>
         )}
-        {slotsStatus === 'ready' && slots.length > 0 && (
+        {slotsStatus === "ready" && slots.length > 0 && (
           <div className="slot-grid">
             {slots.map((iso) => (
               <label key={iso} className="slot">
@@ -183,7 +241,7 @@ export default function BookingForm({
                   name="slot"
                   value={iso}
                   checked={form.startsAt === iso}
-                  onChange={() => update('startsAt', iso)}
+                  onChange={() => update("startsAt", iso)}
                 />
                 <span>{formatSlot(iso)}</span>
               </label>
@@ -192,19 +250,33 @@ export default function BookingForm({
         )}
       </fieldset>
 
-      <label>
-        How did you hear about us? (optional)
-        <input value={form.referredBy} onChange={(e) => update('referredBy', e.target.value)} />
+      <label className="field">
+        <span>Referred by (optional)</span>
+        <input
+          placeholder="Name or code"
+          value={form.referredBy}
+          onChange={(e) => update("referredBy", e.target.value)}
+        />
       </label>
 
-      <button type="submit" disabled={status === 'submitting' || !form.startsAt}>
-        {status === 'submitting' ? 'Booking…' : 'Confirm booking'}
-      </button>
-
-      {status === 'taken' && (
-        <p className="error" role="alert">Someone just booked that time. Pick another one.</p>
+      {status === "taken" && (
+        <p className="alert" role="alert">
+          That time was just taken. Pick another time or barber.
+        </p>
       )}
-      {status === 'error' && <p className="error" role="alert">Something went wrong. Try again.</p>}
+      {status === "error" && (
+        <p className="alert" role="alert">
+          Something went wrong. Try again.
+        </p>
+      )}
+
+      <button
+        type="submit"
+        className="btn"
+        disabled={status === "submitting" || !form.startsAt}
+      >
+        {status === "submitting" ? "Booking…" : "Book appointment"}
+      </button>
     </form>
   );
 }

@@ -1,6 +1,10 @@
 // Row shapes for the tables in supabase/schema.sql. Keep the two in sync.
 
-export type AppointmentStatus = 'booked' | 'completed' | 'no_show' | 'cancelled';
+export type AppointmentStatus =
+  | "booked"
+  | "completed"
+  | "no_show"
+  | "cancelled";
 
 export interface Location {
   id: string;
@@ -26,6 +30,8 @@ export interface Service {
   name: string;
   price: number;
   duration_minutes: number;
+  description?: string | null; // shown under the name on the branch page
+  category?: "barber" | "spa"; // 'spa' services appear under "Offers and spa"
 }
 
 export interface Appointment {
