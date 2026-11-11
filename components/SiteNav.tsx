@@ -28,14 +28,16 @@ const icons: Record<string, ReactNode> = {
   ),
 };
 
-// Logo at the top, and the three tabs in a bar fixed to the bottom of the screen:
-// Dashboard (offers), Booking (the branches), Staff (sign in and schedule).
+// Logo at the top. The three-tab bar at the bottom only appears once the
+// client is in the booking flow (/book, branch pages and the booking form).
 export default function SiteNav() {
   const pathname = usePathname();
 
   const onStaff = pathname === "/admin" || pathname.startsWith("/admin/");
   const onDashboard = pathname === "/";
   const onBooking = !onStaff && !onDashboard; // /book, branch pages and the booking form
+
+  const showBottomNav = onBooking;
 
   const links = [
     { label: "Dashboard", href: "/", on: onDashboard },
@@ -57,21 +59,23 @@ export default function SiteNav() {
         </div>
       </header>
 
-      <nav className="bottom-nav" aria-label="Main">
-        {links.map((l) => (
-          <Link
-            key={l.label}
-            href={l.href}
-            className={l.on ? "on" : ""}
-            aria-current={l.on ? "page" : undefined}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              {icons[l.label]}
-            </svg>
-            <span>{l.label}</span>
-          </Link>
-        ))}
-      </nav>
+      {showBottomNav && (
+        <nav className="bottom-nav" aria-label="Main">
+          {links.map((l) => (
+            <Link
+              key={l.label}
+              href={l.href}
+              className={l.on ? "on" : ""}
+              aria-current={l.on ? "page" : undefined}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                {icons[l.label]}
+              </svg>
+              <span>{l.label}</span>
+            </Link>
+          ))}
+        </nav>
+      )}
     </>
   );
 }
